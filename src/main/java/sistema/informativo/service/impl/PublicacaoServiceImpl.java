@@ -58,34 +58,37 @@ public class PublicacaoServiceImpl implements PublicacaoService {
                 throw new RuntimeException("validation.error.erroInesperado");
             }
             //---
-            Publicacao publicacao = new Publicacao();
+            Publicacao publicacaoBuilder = Publicacao
+                    .builder()
+                    .imagens(new ArrayList<>())
+                    .usuario(usuarioAtual)
+                    .dataCriacaoEdicao(LocalDateTime.now())
+                    .build();
             //---
-            BeanUtils.copyProperties(publicacaoRequestDto, publicacao);
-
-            publicacao.setImagens(new ArrayList<>());
-            publicacao.setUsuario(usuarioAtual);
-            publicacao.setDataCriacaoEdicao(LocalDateTime.now());
+            BeanUtils.copyProperties(publicacaoRequestDto, publicacaoBuilder);
 
             if (publicacaoRequestDto.getImagens() != null) {
                 for (FileResponseDTO imagemDto : publicacaoRequestDto.getImagens()) {
                     Imagem imagem = new Imagem();
                     BeanUtils.copyProperties(imagemDto, imagem);
-                    imagem.setPublicacao(publicacao);
-                    publicacao.getImagens().add(imagem);
+                    imagem.setPublicacao(publicacaoBuilder);
+                    publicacaoBuilder.getImagens().add(imagem);
                 }
             }
-            Publicacao publicacaoRetorno = publicacaoRepository.save(publicacao);
+            Publicacao publicacaoRetorno = publicacaoRepository.save(publicacaoBuilder);
 
-                Boolean criador = publicacao.getUsuario().equals(usuarioAtual);
+                Boolean criador = publicacaoBuilder.getUsuario().equals(usuarioAtual);
 
-                PublicacaoResponseDTO publicacaoDTO = new PublicacaoResponseDTO();
-                publicacaoDTO.setId(publicacaoRetorno.getIdPublicacao());
-                publicacaoDTO.setTitulo(publicacaoRetorno.getTitulo());
-                publicacaoDTO.setDescricao(publicacaoRetorno.getDescricao());
-                publicacaoDTO.setCriador(criador);
-                publicacaoDTO.setImagens(publicacaoRetorno.getImagens());
-                publicacaoDTO.setUsuario("@" + publicacaoRetorno.getUsuario().getLogin());
-                publicacaoDTO.setData(publicacaoRetorno.getDataCriacaoEdicao());
+                PublicacaoResponseDTO publicacaoDTO = PublicacaoResponseDTO
+                        .builder()
+                        .id(publicacaoRetorno.getIdPublicacao())
+                        .titulo(publicacaoRetorno.getTitulo())
+                        .descricao(publicacaoRetorno.getDescricao())
+                        .criador(criador)
+                        .imagens(publicacaoRetorno.getImagens())
+                        .usuario(publicacaoRetorno.getUsuarioComArroba())
+                        .data(publicacaoRetorno.getDataCriacaoEdicao())
+                        .build();
 
             //---
             return publicacaoDTO;
@@ -117,15 +120,17 @@ public class PublicacaoServiceImpl implements PublicacaoService {
                 for (Publicacao publicacao : publicacoes) {
                     Boolean criador = publicacao.getUsuario().equals(usuarioAtual);
 
-                    PublicacaoResponseDTO publicacaoDTO = new PublicacaoResponseDTO();
-                    publicacaoDTO.setId(publicacao.getIdPublicacao());
-                    publicacaoDTO.setTitulo(publicacao.getTitulo());
-                    publicacaoDTO.setDescricao(publicacao.getDescricao());
-                    publicacaoDTO.setCriador(criador);
-                    publicacaoDTO.setImagens(publicacao.getImagens());
-                    publicacaoDTO.setUsuario("@" + publicacao.getUsuario().getLogin());
-                    publicacaoDTO.setData(publicacao.getDataCriacaoEdicao());
-                    publicacoesDTO.add(publicacaoDTO);
+                    PublicacaoResponseDTO publicacaoBuilder = PublicacaoResponseDTO
+                            .builder()
+                            .id(publicacao.getIdPublicacao())
+                            .titulo(publicacao.getTitulo())
+                            .descricao(publicacao.getDescricao())
+                            .criador(criador)
+                            .imagens(publicacao.getImagens())
+                            .usuario(publicacao.getUsuarioComArroba())
+                            .data(publicacao.getDataCriacaoEdicao())
+                            .build();
+                    publicacoesDTO.add(publicacaoBuilder);
                 }
 
                 return publicacoesDTO;
